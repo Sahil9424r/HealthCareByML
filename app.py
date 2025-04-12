@@ -1,8 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
-import numpy as np
-import pandas as pd
-import pickle
 import os
+import random  # For demo purposes
 from models import db, ContactMessage
 
 # Flask app
@@ -18,16 +16,44 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Load datasets
-sym_des = pd.read_csv("datasets/symtoms_df.csv")
-precautions = pd.read_csv("datasets/precautions_df.csv")
-workout = pd.read_csv("datasets/workout_df.csv")
-description = pd.read_csv("datasets/description.csv")
-medications = pd.read_csv('datasets/medications.csv')
-diets = pd.read_csv("datasets/diets.csv")
+# Create mock data structures for testing UI without actual models/datasets
+class MockDataset:
+    def __init__(self, data=None):
+        self.data = data or {}
+    
+    def __getitem__(self, key):
+        return MockDataset(self.data)
+    
+    @property
+    def empty(self):
+        return False
+    
+    @property
+    def iloc(self):
+        return MockDatasetItem()
+    
+    def tolist(self):
+        return ["Exercise for 30 minutes daily", "Stay hydrated", "Get adequate rest"]
 
-# Load model
-svc = pickle.load(open('models/svc.pkl', 'rb'))
+class MockDatasetItem:
+    def __getitem__(self, key):
+        return "Sample data for testing"
+
+# Create mock datasets for UI testing
+sym_des = MockDataset()
+precautions = MockDataset()
+workout = MockDataset()
+description = MockDataset()
+medications = MockDataset()
+diets = MockDataset()
+
+# Mock model
+class MockModel:
+    def predict(self, input_vector):
+        # Random disease for testing
+        return [random.choice(list(diseases_list.keys()))]
+        
+svc = MockModel()
 
 # Helper function
 def helper(dis):
