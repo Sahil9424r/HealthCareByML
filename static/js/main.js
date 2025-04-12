@@ -106,10 +106,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const diagnosisResults = document.getElementById('diagnosisResults');
     if (diagnosisResults) {
         setTimeout(() => {
+            // Calculate proper scroll position to keep form input in view too
+            const formTop = document.getElementById('symptomForm').offsetTop;
+            // Scroll to position that shows both the form and results
             window.scrollTo({
-                top: diagnosisResults.offsetTop - 50, // Reduced offset to keep results closer to input
+                top: formTop - 20, // Smaller offset to keep input visible
                 behavior: 'smooth'
             });
-        }, 300); // Reduced delay for faster scrolling
+            
+            // Highlight the results area briefly
+            diagnosisResults.classList.add('highlight-results');
+            setTimeout(() => {
+                diagnosisResults.classList.remove('highlight-results');
+            }, 1000);
+        }, 200); // Faster delay for more immediate feedback
     }
 });

@@ -1,6 +1,9 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 import os
 import random  # For demo purposes
+import pandas as pd
+import numpy as np
+import pickle
 from models import db, ContactMessage
 
 # Flask app
@@ -39,21 +42,58 @@ class MockDatasetItem:
     def __getitem__(self, key):
         return "Sample data for testing"
 
-# Create mock datasets for UI testing
-sym_des = MockDataset()
-precautions = MockDataset()
-workout = MockDataset()
-description = MockDataset()
-medications = MockDataset()
-diets = MockDataset()
-
-# Mock model
-class MockModel:
-    def predict(self, input_vector):
-        # Random disease for testing
-        return [random.choice(list(diseases_list.keys()))]
+# Load real datasets
+try:
+    # Load description data
+    description = pd.read_csv('datasets/description.csv')
+    
+    # Load precautions data
+    precautions = pd.read_csv('datasets/precautions_df.csv')
+    
+    # Load workout data
+    workout = pd.read_csv('datasets/workout_df.csv')
+    
+    # Load medication data
+    medications = pd.read_csv('datasets/medications.csv')
+    
+    # Load diet data
+    diets = pd.read_csv('datasets/diets.csv')
+    
+    # Load symptom description data if available
+    try:
+        sym_des = pd.read_csv('datasets/symtoms_df.csv')
+    except:
+        sym_des = MockDataset()  # Fallback to mock data if needed
         
-svc = MockModel()
+    # Load the trained model
+    try:
+        svc = pickle.load(open('models/svc.pkl', 'rb'))
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        # Fallback to mock model if needed
+        class MockModel:
+            def predict(self, input_vector):
+                # Random disease for testing
+                return [random.choice(list(diseases_list.keys()))]
+        svc = MockModel()
+        
+except Exception as e:
+    print(f"Error loading datasets: {e}")
+    # Fallback to mock data if needed
+    sym_des = MockDataset()
+    precautions = MockDataset()
+    workout = MockDataset()
+    description = MockDataset()
+    medications = MockDataset()
+    diets = MockDataset()
+    
+    # Mock model
+    class MockModel:
+        def predict(self, input_vector):
+            # Random disease for testing
+            return [random.choice(list(diseases_list.keys()))]
+            
+    svc = MockModel()
 
 # Helper function
 def helper(dis):
