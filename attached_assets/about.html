@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}About - Medical Diagnosis System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-center mb-4">About the Medical Diagnosis System</h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>What is the Medical Diagnosis System?</h4>
+                    <p>The Medical Diagnosis System is an AI-powered application that helps users identify potential medical conditions based on their symptoms. By analyzing patterns in symptom combinations, our system can suggest possible diagnoses and provide helpful information including:</p>
+                    
+                    <ul>
+                        <li>Disease descriptions and information</li>
+                        <li>Recommended precautions</li>
+                        <li>Medication information</li>
+                        <li>Dietary recommendations</li>
+                        <li>Exercise and lifestyle suggestions</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning">
+                        <h5>Important Disclaimer</h5>
+                        <p>This system is designed as a supplementary tool and should not replace professional medical advice. Always consult with a qualified healthcare provider for proper diagnosis and treatment.</p>
+                    </div>
+                    
+                    <h4 class="mt-4">How It Works</h4>
+                    <p>Our system utilizes machine learning algorithms trained on extensive medical datasets to recognize patterns between symptoms and diagnoses. When you input your symptoms, the application:</p>
+                    
+                    <ol>
+                        <li>Processes your symptom information</li>
+                        <li>Compares it against known patterns</li>
+                        <li>Identifies potential matches</li>
+                        <li>Provides relevant healthcare information</li>
+                    </ol>
+                    
+                    <h4 class="mt-4">Technologies Used</h4>
+                    <ul>
+                        <li>Python with Flask web framework</li>
+                        <li>scikit-learn for machine learning capabilities</li>
+                        <li>Pandas and NumPy for data processing</li>
+                        <li>Bootstrap for responsive design</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

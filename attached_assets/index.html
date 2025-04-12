@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+
+{% block title %}Medical Diagnosis System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-center mb-4">Medical Diagnosis System</h1>
+            
+            {% if message %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Enter Your Symptoms</h3>
+                </div>
+                <div class="card-body">
+                    <form action="/predict" method="post">
+                        <div class="mb-3">
+                            <label for="symptoms" class="form-label">Symptoms (comma separated)</label>
+                            <input type="text" class="form-control" id="symptoms" name="symptoms" 
+                                   placeholder="E.g. fatigue, cough, fever" 
+                                   value="{{ user_symptoms if user_symptoms else '' }}"
+                                   autocomplete="off">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Diagnose</button>
+                        </div>
+                        
+                        {% if symptoms %}
+                        <div id="symptomsList" class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <p class="mb-2">Click to add symptoms:</p>
+                                <button type="button" class="btn btn-outline-info btn-sm" id="toggleSymptomsBtn">
+                                    <span id="toggleText">Show More</span>
+                                </button>
+                            </div>
+                            <div class="d-flex flex-wrap" id="symptomsContainer">
+                                {% for symptom in symptoms|sort %}
+                                    {% if loop.index <= 10 %}
+                                    <span class="badge rounded-pill bg-secondary m-1 symptom-badge visible-symptom" onclick="addSymptom('{{ symptom }}')">{{ symptom }}</span>
+                                    {% else %}
+                                    <span class="badge rounded-pill bg-secondary m-1 symptom-badge hidden-symptom" onclick="addSymptom('{{ symptom }}')" style="display: none;">{{ symptom }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            {% if predicted_disease %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title">Diagnosis Results</h3>
+                </div>
+                <div class="card-body">
+                    <h4>Predicted Disease: <span class="text-danger">{{ predicted_disease }}</span></h4>
+                    <p>{{ dis_des }}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">Precautions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        {% for precaution in my_precautions %}
+                                        <li class="list-group-item">{{ precaution }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">Medications</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        {% for med_list in medications %}
+                                            {% for med in med_list %}
+                                                <li class="list-group-item">{{ med }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">Recommended Diet</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        {% for diet_list in my_diet %}
+                                            {% for diet in diet_list %}
+                                                <li class="list-group-item">{{ diet }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">Exercise Recommendations</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        {% for exercise in workout %}
+                                        <li class="list-group-item">{{ exercise }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Activate autocomplete
+    const symptomInput = document.getElementById('symptoms');
+    const symptoms = {{ symptoms|tojson }};
+    
+    // Function to add symptom when clicked
+    window.addSymptom = function(symptom) {
+        const currentValue = symptomInput.value;
+        if (currentValue === '') {
+            symptomInput.value = symptom;
+        } else {
+            const symptoms = currentValue.split(',').map(s => s.trim());
+            if (!symptoms.includes(symptom)) {
+                symptomInput.value = currentValue + ', ' + symptom;
+            }
+        }
+    };
+
+    // Set up toggle button for symptoms
+    const toggleBtn = document.getElementById('toggleSymptomsBtn');
+    const toggleText = document.getElementById('toggleText');
+    const hiddenSymptoms = document.querySelectorAll('.hidden-symptom');
+    
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const isShowing = toggleText.textContent === 'Show Less';
+            
+            hiddenSymptoms.forEach(symptom => {
+                symptom.style.display = isShowing ? 'none' : 'inline-block';
+            });
+            
+            toggleText.textContent = isShowing ? 'Show More' : 'Show Less';
+        });
+    }
+});
+</script>
+{% endblock %}
