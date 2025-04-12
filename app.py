@@ -1,14 +1,22 @@
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 import os
 import random  # For demo purposes
 import pandas as pd
 import numpy as np
 import pickle
-from models import db, ContactMessage
+from models import db, ContactMessage, Subscription, BlogPost
+from email_validator import validate_email, EmailNotValidError
 
 # Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///medical_diagnosis.db'
+
+# Use MySQL database if DATABASE_URL is provided, otherwise fallback to SQLite
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///medical_diagnosis.db'
+    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
 
@@ -296,6 +304,63 @@ def developer():
 @app.route('/blog')
 def blog():
     return render_template("blog.html")
+
+# Subscription handler
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    try:
+        # For AJAX requests
+        if request.headers.get('Content-Type') == 'application/json':
+            data = request.get_json()
+            email = data.get('email', '')
+        else:
+            # For form submissions
+            email = request.form.get('email', '')
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'Email address is required.'})
+        
+        try:
+            # Validate email format
+            valid = validate_email(email)
+            email = valid.email
+        except EmailNotValidError as e:
+            return jsonify({'success': False, 'message': str(e)})
+            
+        # Check if already subscribed
+        existing_subscription = Subscription.query.filter_by(email=email).first()
+        if existing_subscription:
+            if existing_subscription.is_active:
+                return jsonify({'success': False, 'message': 'This email is already subscribed.'})
+            else:
+                # Reactivate subscription
+                existing_subscription.is_active = True
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Your subscription has been reactivated!'})
+        
+        # Create new subscription
+        new_subscription = Subscription(email=email)
+        db.session.add(new_subscription)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Thank you for subscribing to our newsletter!'})
+    except Exception as e:
+        print(f"Error in subscription process: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred. Please try again later.'})
+
+# Blog article pages
+@app.route('/blog/latest/<slug>')
+def blog_article(slug):
+    # For a fully functional blog, fetch the article from database
+    # Since we're just demonstrating, we'll return a message
+    return render_template('blog.html')
+
+# Blog category pages
+@app.route('/blog/category/<category>')
+def blog_category(category):
+    # For a fully functional blog, fetch articles by category
+    # Since we're just demonstrating, we'll return to the main blog
+    return render_template('blog.html')
 
 # Get all symptoms for autocomplete
 @app.route('/symptoms')
